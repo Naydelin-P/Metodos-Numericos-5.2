@@ -1,0 +1,59 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Función para calcular la tabla de diferencias divididas de Newton
+def newton_divided_diff(x, y):
+    """ Calcula la tabla de diferencias divididas """
+    n = len(x)
+    coef = np.zeros([n, n])
+    coef[:, 0] = y  # Primera columna es y
+
+    for j in range(1, n):
+        for i in range(n - j):
+            coef[i, j] = (coef[i + 1, j - 1] - coef[i, j - 1]) / (x[i + j] - x[i])
+
+    return coef[0, :]  # Retorna la primera fila (coeficientes)
+
+# Función para evaluar la interpolación de Newton en un punto o varios puntos
+def newton_interpolation(x_points, y_points, x_eval):
+    """ Evalúa el polinomio de Newton """
+    coef = newton_divided_diff(x_points, y_points)
+    n = len(x_points)
+    result = []
+
+    for x in x_eval:  # Puede evaluar múltiples puntos
+        term = coef[0]
+        product = 1
+        for i in range(1, n):
+            product *= (x - x_points[i - 1])
+            term += coef[i] * product
+        result.append(term)
+
+    return np.array(result)
+
+# Puntos de interpolación
+x_points = np.array([200, 250, 300, 350, 400])
+y_points = np.array([30, 35, 40, 46, 53])
+
+# Evaluar la interpolación en un valor específico
+x_target = 275
+y_target = newton_interpolation(x_points, y_points, [x_target])[0]
+print(f"La eficiencia del motor para T = {x_target}°C es de: {y_target:.2f}%")
+
+# Puntos para graficar la interpolación
+x_values = np.linspace(min(x_points), max(x_points), 100)
+y_values = newton_interpolation(x_points, y_points, x_values)
+
+# Graficar los puntos y la interpolación
+plt.figure(figsize=(6, 4))
+plt.plot(x_values, y_values, label="Interpolación de Newton", color="blue")
+plt.scatter(x_points, y_points, color="red", label="Puntos dados")
+plt.axvline(x=x_target, color="green", linestyle="--", label=f"T(°C) = {x_target}")
+plt.scatter([x_target], [y_target], color="purple", label=f"Punto interpolado T(°C)={x_target}, E={y_target:.2f})")
+plt.xlabel("T(°C)")
+plt.ylabel("E(%)")
+plt.title("Interpolación de Newton")
+plt.legend()
+plt.grid(True)
+plt.savefig("newton_interpolacion.png")
+plt.show()
